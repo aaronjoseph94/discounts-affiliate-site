@@ -16,7 +16,7 @@ import {
   updateDeal,
   updateSettings,
 } from "../lib/api.ts";
-import type { Deal, LogoHit } from "../lib/types.ts";
+import { pageTitle, type Deal, type LogoHit } from "../lib/types.ts";
 
 const blank = {
   productName: "",
@@ -45,6 +45,7 @@ export function Admin() {
   const { message, showToast } = useToast();
 
   useEffect(() => {
+    document.title = pageTitle("Admin");
     let alive = true;
     getSession()
       .then(({ authenticated }) => {
@@ -296,12 +297,13 @@ export function Admin() {
             Sign out
           </button>
         </div>
-        <h1>{editingId ? "Edit deal" : "Add a deal"}</h1>
+        <h1>Admin</h1>
         <p className="lede">Type a product name. The brand logo is pulled in automatically.</p>
       </header>
 
       {error ? <p className="banner error">{error}</p> : null}
 
+      <h2 className="admin-heading">Site</h2>
       <form className="card-form" onSubmit={(event) => void handleSiteSave(event)}>
         <label>
           Site title
@@ -347,6 +349,7 @@ export function Admin() {
         </div>
       </form>
 
+      <h2 className="admin-heading">{editingId ? "Edit deal" : "Add a deal"}</h2>
       <form className="card-form" onSubmit={(event) => void handleSave(event)}>
         <div className="logo-preview">
           <BrandLogo
@@ -457,7 +460,7 @@ export function Admin() {
       </form>
 
       <section className="admin-list">
-        <h2>Your deals</h2>
+        <h2 className="admin-heading">Your deals</h2>
         {deals.length === 0 ? <p className="lede">Nothing saved yet.</p> : null}
         {deals.map((deal) => (
           <article key={deal.id} className="admin-row">

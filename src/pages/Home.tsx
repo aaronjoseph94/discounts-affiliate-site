@@ -4,13 +4,11 @@ import { DealCard } from "../components/DealCard.tsx";
 import { Toast } from "../components/Toast.tsx";
 import { useToast } from "../hooks/useToast.ts";
 import { getDeals, getSettings } from "../lib/api.ts";
-import type { Deal } from "../lib/types.ts";
-
-const fallbackTitle = "Discount codes and affiliate deals, ready to copy.";
+import { DEFAULT_TAGLINE, SITE_NAME, pageTitle, type Deal } from "../lib/types.ts";
 
 export function Home() {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [title, setTitle] = useState(fallbackTitle);
+  const [title, setTitle] = useState(DEFAULT_TAGLINE);
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [logoFailed, setLogoFailed] = useState(false);
   const [query, setQuery] = useState("");
@@ -24,10 +22,10 @@ export function Home() {
       .then(([{ deals: next }, { settings }]) => {
         if (!alive) return;
         setDeals(next);
-        setTitle(settings.title || fallbackTitle);
+        setTitle(settings.title || DEFAULT_TAGLINE);
         setLogoUrl(settings.logoUrl || "/logo.png");
         setLogoFailed(false);
-        document.title = settings.title || fallbackTitle;
+        document.title = pageTitle();
       })
       .catch((err: unknown) => {
         if (alive) setError(err instanceof Error ? err.message : "Could not load deals");
@@ -55,7 +53,7 @@ export function Home() {
           <img
             className="hero-logo"
             src={logoFailed ? "/logo.png" : logoUrl}
-            alt="Discounts & Deals"
+            alt={SITE_NAME}
             onError={() => setLogoFailed(true)}
           />
           <h1>{title}</h1>

@@ -2,6 +2,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { DEFAULT_TAGLINE } from "../../../shared/brand.ts";
 import type { SiteSettings } from "../../../shared/types.ts";
 import { DealInputError } from "./http.ts";
 
@@ -12,7 +13,7 @@ const logoPath = join(dirname(fileURLToPath(import.meta.url)), "../../../data/si
 const defaultLogoPath = join(dirname(fileURLToPath(import.meta.url)), "../../../public/logo.png");
 
 export const defaultSettings: SiteSettings = {
-  title: "Discount codes and affiliate deals, ready to copy.",
+  title: DEFAULT_TAGLINE,
   logoUrl: "/logo.png",
 };
 

@@ -1,4 +1,4 @@
-# Codes — discount & affiliate site
+# Discounts & Deals
 
 A fast, mobile-first site for discount codes and affiliate links. Add a product name, optional affiliate URL, optional code, and percent off. Brand logos are looked up automatically.
 
