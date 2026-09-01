@@ -1,3 +1,8 @@
+/**
+ * Admin sessions are an HMAC of the expiry timestamp, signed with ADMIN_PASSWORD.
+ * Production refuses the local default password so a forgotten env var cannot
+ * leave /admin open.
+ */
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const COOKIE = "codes_session";
@@ -8,34 +13,33 @@ function envGet(name: string): string | undefined {
     const value = Netlify.env.get(name);
     if (value) return value;
   } catch {
-    // Not running inside a Netlify function runtime.
+    // Local Vite middleware is plain Node, not the Netlify function runtime.
   }
   return process.env[name];
 }
 
+function isProduction(): boolean {
+  const context = envGet("CONTEXT") || envGet("NODE_ENV");
+  return context === "production";
+}
+
 export function adminPassword(): string | null {
   const configured = envGet("ADMIN_PASSWORD");
-  if (configured) return configured;
-  const context = envGet("CONTEXT");
-  if (context === "production") return null;
-  return "admin";
+  if (isProduction()) {
+    if (!configured || configured === "admin") return null;
+    return configured;
+  }
+  return configured || "admin";
 }
 
 function sign(value: string, secret: string): string {
   return createHmac("sha256", secret).update(value).digest("hex");
 }
 
-function safeEqual(a: string, b: string): boolean {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  if (left.length !== right.length) return false;
-  return timingSafeEqual(left, right);
-}
-
+/** Constant-time compare via hashes so password length is not leaked. */
 export function passwordsMatch(input: string, expected: string): boolean {
-  const left = Buffer.from(input);
-  const right = Buffer.from(expected);
-  if (left.length !== right.length) return false;
+  const left = createHmac("sha256", "codes-compare").update(input).digest();
+  const right = createHmac("sha256", "codes-compare").update(expected).digest();
   return timingSafeEqual(left, right);
 }
 
@@ -52,7 +56,11 @@ export function sessionValid(token: string | undefined, secret: string): boolean
   if (!payload || !sig || !Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) {
     return false;
   }
-  return safeEqual(sig, sign(payload, secret));
+  const expected = sign(payload, secret);
+  const left = Buffer.from(sig);
+  const right = Buffer.from(expected);
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
 }
 
 export function readSessionCookie(req: Request): string | undefined {
@@ -72,7 +80,7 @@ export function isAuthenticated(req: Request): boolean {
 }
 
 function cookieFlags(req: Request): string {
-  const secure = new URL(req.url).protocol === "https:" ? "; Secure" : "";
+  const secure = isProduction() || new URL(req.url).protocol === "https:" ? "; Secure" : "";
   return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * DAY}${secure}`;
 }
 
@@ -81,6 +89,6 @@ export function sessionCookie(req: Request, token: string): string {
 }
 
 export function clearSessionCookie(req: Request): string {
-  const secure = new URL(req.url).protocol === "https:" ? "; Secure" : "";
+  const secure = isProduction() || new URL(req.url).protocol === "https:" ? "; Secure" : "";
   return `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
 }

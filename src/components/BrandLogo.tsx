@@ -17,12 +17,12 @@ function fallbacks(src?: string, domain?: string): string[] {
   if (src) urls.push(src);
   if (domain) {
     urls.push(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`);
-    urls.push(`https://icons.duckduckgo.com/ip3/${domain}.ico`);
+    urls.push(`https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`);
   }
   return [...new Set(urls)];
 }
 
-export function BrandLogo({ name, src, domain, size = "md" }: BrandLogoProps) {
+function BrandLogoInner({ name, src, domain, size = "md" }: BrandLogoProps) {
   const [index, setIndex] = useState(0);
   const urls = fallbacks(src, domain);
   const current = urls[index];
@@ -44,4 +44,8 @@ export function BrandLogo({ name, src, domain, size = "md" }: BrandLogoProps) {
       onError={() => setIndex((value) => value + 1)}
     />
   );
+}
+
+export function BrandLogo(props: BrandLogoProps) {
+  return <BrandLogoInner key={`${props.src ?? ""}:${props.domain ?? ""}`} {...props} />;
 }

@@ -1,3 +1,4 @@
+/* Mobile-first layout. Color tokens stay here so cards and admin share one palette. */
 :root {
   color-scheme: light;
   --bg: #f3efe6;
@@ -305,6 +306,7 @@ h2 {
   justify-items: center;
 }
 
+/* Admin form */
 .card-form {
   display: grid;
   gap: 14px;

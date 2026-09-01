@@ -1,14 +1,14 @@
-import type { Deal, LogoHit } from "./types.ts";
+import type { Deal, DealInput, LogoHit } from "./types.ts";
+
+const jsonHeaders = { "Content-Type": "application/json" };
 
 async function readJson<T>(res: Response): Promise<T> {
-  const data = (await res.json()) as T & { error?: string };
+  const data = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok) {
     throw new Error(data.error || "Request failed");
   }
   return data;
 }
-
-const jsonHeaders = { "Content-Type": "application/json" };
 
 export function getDeals(): Promise<{ deals: Deal[] }> {
   return fetch("/api/deals").then((res) => readJson(res));
@@ -32,19 +32,10 @@ export function getSession(): Promise<{ authenticated: boolean }> {
 
 export function searchLogos(name: string, url: string): Promise<{ results: LogoHit[] }> {
   const params = new URLSearchParams();
-  if (name.trim()) params.set("name", name.trim());
-  if (url.trim()) params.set("url", url.trim());
+  if (name.trim()) params.set("name", name.trim().slice(0, 80));
+  if (url.trim()) params.set("url", url.trim().slice(0, 500));
   return fetch(`/api/logo?${params}`).then((res) => readJson(res));
 }
-
-export type DealInput = {
-  productName: string;
-  affiliateUrl: string;
-  discountCode: string;
-  discountPercent: number | null;
-  logoUrl?: string;
-  domain?: string;
-};
 
 export function createDeal(input: DealInput): Promise<{ deal: Deal }> {
   return fetch("/api/deals", {
@@ -55,7 +46,7 @@ export function createDeal(input: DealInput): Promise<{ deal: Deal }> {
 }
 
 export function updateDeal(id: string, input: DealInput): Promise<{ deal: Deal }> {
-  return fetch(`/api/deals/${id}`, {
+  return fetch(`/api/deals/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: jsonHeaders,
     body: JSON.stringify(input),
@@ -63,5 +54,7 @@ export function updateDeal(id: string, input: DealInput): Promise<{ deal: Deal }
 }
 
 export function deleteDeal(id: string): Promise<{ ok: true }> {
-  return fetch(`/api/deals/${id}`, { method: "DELETE" }).then((res) => readJson(res));
+  return fetch(`/api/deals/${encodeURIComponent(id)}`, { method: "DELETE" }).then((res) => readJson(res));
 }
+
+export type { DealInput };

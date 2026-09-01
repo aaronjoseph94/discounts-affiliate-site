@@ -1,10 +1,10 @@
-import type { Deal } from "./types.ts";
+import type { Deal } from "../../../shared/types.ts";
 
 export const seedDeals: Deal[] = [
   {
     id: "seed-nordvpn",
     productName: "NordVPN",
-    affiliateUrl: "https://nordvpn.com",
+    affiliateUrl: "https://nordvpn.com/",
     discountCode: "SAVE68",
     discountPercent: 68,
     domain: "nordvpn.com",
@@ -14,7 +14,7 @@ export const seedDeals: Deal[] = [
   {
     id: "seed-nike",
     productName: "Nike",
-    affiliateUrl: "https://nike.com",
+    affiliateUrl: "https://nike.com/",
     discountCode: "SPORT20",
     discountPercent: 20,
     domain: "nike.com",
@@ -24,7 +24,7 @@ export const seedDeals: Deal[] = [
   {
     id: "seed-adobe",
     productName: "Adobe Creative Cloud",
-    affiliateUrl: "https://adobe.com",
+    affiliateUrl: "https://adobe.com/",
     discountCode: "",
     discountPercent: 40,
     domain: "adobe.com",
@@ -34,7 +34,7 @@ export const seedDeals: Deal[] = [
   {
     id: "seed-booking",
     productName: "Booking.com",
-    affiliateUrl: "https://booking.com",
+    affiliateUrl: "https://booking.com/",
     discountCode: "TRAVEL10",
     discountPercent: 10,
     domain: "booking.com",
@@ -44,7 +44,7 @@ export const seedDeals: Deal[] = [
   {
     id: "seed-audible",
     productName: "Audible",
-    affiliateUrl: "https://audible.com",
+    affiliateUrl: "https://audible.com/",
     discountCode: "",
     discountPercent: 60,
     domain: "audible.com",
@@ -54,7 +54,7 @@ export const seedDeals: Deal[] = [
   {
     id: "seed-skillshare",
     productName: "Skillshare",
-    affiliateUrl: "https://skillshare.com",
+    affiliateUrl: "https://skillshare.com/",
     discountCode: "PREMIUM40",
     discountPercent: 40,
     domain: "skillshare.com",

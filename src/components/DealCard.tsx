@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Deal } from "../lib/types.ts";
 import { BrandLogo } from "./BrandLogo.tsx";
 
@@ -9,6 +9,9 @@ type DealCardProps = {
 
 export function DealCard({ deal, onCopied }: DealCardProps) {
   const [copied, setCopied] = useState(false);
+  const timer = useRef(0);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   async function copyCode() {
     if (!deal.discountCode) return;
@@ -17,6 +20,9 @@ export function DealCard({ deal, onCopied }: DealCardProps) {
     } catch {
       const field = document.createElement("textarea");
       field.value = deal.discountCode;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.left = "-9999px";
       document.body.appendChild(field);
       field.select();
       document.execCommand("copy");
@@ -24,7 +30,8 @@ export function DealCard({ deal, onCopied }: DealCardProps) {
     }
     setCopied(true);
     onCopied(`Copied ${deal.discountCode}`);
-    window.setTimeout(() => setCopied(false), 1600);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 1600);
   }
 
   return (
@@ -54,7 +61,12 @@ export function DealCard({ deal, onCopied }: DealCardProps) {
           </button>
         ) : null}
         {deal.affiliateUrl ? (
-          <a className="btn btn-secondary" href={deal.affiliateUrl} target="_blank" rel="noreferrer sponsored">
+          <a
+            className="btn btn-secondary"
+            href={deal.affiliateUrl}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+          >
             Shop deal
           </a>
         ) : null}

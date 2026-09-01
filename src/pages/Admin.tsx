@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { BrandLogo } from "../components/BrandLogo.tsx";
 import { Toast } from "../components/Toast.tsx";
+import { useToast } from "../hooks/useToast.ts";
 import {
   createDeal,
   deleteDeal,
@@ -32,51 +33,61 @@ export function Admin() {
   const [picked, setPicked] = useState<LogoHit | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [toast, setToast] = useState("");
+  const { message, showToast } = useToast();
 
   useEffect(() => {
+    let alive = true;
     getSession()
-      .then(({ authenticated }) => setAuthed(authenticated))
-      .finally(() => setChecking(false));
+      .then(({ authenticated }) => {
+        if (alive) setAuthed(authenticated);
+      })
+      .catch(() => {
+        if (alive) setError("Could not check session");
+      })
+      .finally(() => {
+        if (alive) setChecking(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (authed) {
-      void refreshDeals();
-    }
+    if (authed) void refreshDeals();
   }, [authed]);
 
   useEffect(() => {
     if (!authed) return;
     const name = form.productName.trim();
     const url = form.affiliateUrl.trim();
-    if (name.length < 2 && url.length < 4) {
-      setHits([]);
-      return;
-    }
+    if (name.length < 2 && url.length < 4) return;
 
+    let alive = true;
     const timer = window.setTimeout(() => {
       void searchLogos(name, url)
         .then(({ results }) => {
+          if (!alive) return;
           setHits(results);
           setPicked((current) => current ?? results[0] ?? null);
         })
         .catch(() => {
-          setHits([]);
+          if (alive) setHits([]);
         });
     }, 350);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
   }, [authed, form.productName, form.affiliateUrl]);
 
   async function refreshDeals() {
-    const { deals: next } = await getDeals();
-    setDeals(next);
-  }
-
-  function showToast(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 1800);
+    try {
+      const { deals: next } = await getDeals();
+      setDeals(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load deals");
+    }
   }
 
   async function handleLogin(event: FormEvent) {
@@ -171,7 +182,10 @@ export function Admin() {
             ← All deals
           </Link>
           <h1>Admin</h1>
-          <p className="lede">Add brands, codes, and affiliate links. Local default password is <code>admin</code>.</p>
+          <p className="lede">Add brands, codes, and affiliate links.</p>
+          {import.meta.env.DEV ? (
+            <p className="lede">Local default password is <code>admin</code>.</p>
+          ) : null}
         </header>
         <form className="card-form" onSubmit={(event) => void handleLogin(event)}>
           <label>
@@ -238,6 +252,7 @@ export function Admin() {
             }}
             placeholder="Nike, NordVPN, Adobe…"
             required
+            maxLength={80}
             autoComplete="off"
           />
         </label>
@@ -245,7 +260,7 @@ export function Admin() {
         <label>
           Affiliate URL
           <input
-            type="url"
+            type="text"
             inputMode="url"
             value={form.affiliateUrl}
             onChange={(event) => {
@@ -253,6 +268,7 @@ export function Admin() {
               setForm((current) => ({ ...current, affiliateUrl: event.target.value }));
             }}
             placeholder="https://…"
+            maxLength={500}
             autoComplete="off"
           />
         </label>
@@ -264,6 +280,7 @@ export function Admin() {
               value={form.discountCode}
               onChange={(event) => setForm((current) => ({ ...current, discountCode: event.target.value }))}
               placeholder="SAVE20"
+              maxLength={40}
               autoCapitalize="characters"
               autoComplete="off"
             />
@@ -282,7 +299,7 @@ export function Admin() {
           </label>
         </div>
 
-        {hits.length > 1 ? (
+        {(form.productName.trim().length >= 2 || form.affiliateUrl.trim().length >= 4) && hits.length > 1 ? (
           <div className="logo-picks" role="list">
             {hits.map((hit) => (
               <button
@@ -313,6 +330,7 @@ export function Admin() {
                 setForm(blank);
                 setPicked(null);
                 setHits([]);
+                setError("");
               }}
             >
               Cancel
@@ -346,7 +364,7 @@ export function Admin() {
         ))}
       </section>
 
-      <Toast message={toast} />
+      <Toast message={message} />
     </div>
   );
 }

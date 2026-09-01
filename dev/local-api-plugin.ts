@@ -1,6 +1,9 @@
+/** Vite middleware that runs the same API router as Netlify Functions. */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { routeApi } from "../netlify/functions/_shared/router.ts";
+
+const MAX_BODY_BYTES = 32_768;
 
 function toHeaders(req: IncomingMessage): Headers {
   const headers = new Headers();
@@ -11,29 +14,41 @@ function toHeaders(req: IncomingMessage): Headers {
   return headers;
 }
 
-function toRequest(req: IncomingMessage): Promise<Request> {
+function readBody(req: IncomingMessage): Promise<Buffer> {
+  if (req.readableEnded) return Promise.resolve(Buffer.alloc(0));
+
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    req.on("data", (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        reject(new Error("Payload too large"));
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
+async function toRequest(req: IncomingMessage): Promise<Request> {
   const host = req.headers.host ?? "localhost";
   const url = `http://${host}${req.url ?? "/"}`;
   const headers = toHeaders(req);
   const method = req.method ?? "GET";
   if (method === "GET" || method === "HEAD") {
-    return Promise.resolve(new Request(url, { method, headers }));
+    return new Request(url, { method, headers });
   }
 
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on("data", (chunk: Buffer) => chunks.push(chunk));
-    req.on("end", () => {
-      resolve(
-        new Request(url, {
-          method,
-          headers,
-          body: Buffer.concat(chunks),
-        }),
-      );
-    });
-    req.on("error", reject);
-  });
+  const body = await readBody(req);
+  return new Request(url, {
+    method,
+    headers,
+    body,
+    duplex: "half",
+  } as RequestInit);
 }
 
 async function writeResponse(res: ServerResponse, response: Response): Promise<void> {
@@ -59,9 +74,11 @@ export function localApiPlugin(): Plugin {
           .then((response) => writeResponse(res, response))
           .catch((err: unknown) => {
             console.error(err);
-            res.statusCode = 500;
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ error: "Server error" }));
+            if (!res.headersSent) {
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ error: "Server error" }));
+            }
           });
       });
     },

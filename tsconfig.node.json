@@ -20,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "dev/local-api-plugin.ts", "netlify/functions/**/*.ts"]
+  "include": ["vite.config.ts", "vitest.config.ts", "dev/local-api-plugin.ts", "netlify/functions/**/*.ts", "shared/**/*.ts", "tests/**/*.ts"]
 }

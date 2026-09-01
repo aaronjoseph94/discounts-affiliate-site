@@ -2,15 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DealCard } from "../components/DealCard.tsx";
 import { Toast } from "../components/Toast.tsx";
+import { useToast } from "../hooks/useToast.ts";
 import { getDeals } from "../lib/api.ts";
 import type { Deal } from "../lib/types.ts";
 
 export function Home() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [query, setQuery] = useState("");
-  const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { message, showToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -33,14 +34,9 @@ export function Home() {
     const needle = query.trim().toLowerCase();
     if (!needle) return deals;
     return deals.filter((deal) =>
-      [deal.productName, deal.discountCode, deal.domain].join(" ").toLowerCase().includes(needle),
+      [deal.productName, deal.discountCode, deal.domain, deal.affiliateUrl].join(" ").toLowerCase().includes(needle),
     );
   }, [deals, query]);
-
-  function showToast(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 1800);
-  }
 
   return (
     <div className="page">
@@ -79,14 +75,14 @@ export function Home() {
           ) : null}
         </div>
       ) : (
-        <section className="deal-grid">
+        <section className="deal-grid" aria-live="polite">
           {filtered.map((deal) => (
             <DealCard key={deal.id} deal={deal} onCopied={showToast} />
           ))}
         </section>
       )}
 
-      <Toast message={toast} />
+      <Toast message={message} />
     </div>
   );
 }

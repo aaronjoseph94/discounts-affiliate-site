@@ -15,6 +15,11 @@ npm run dev
 
 Deals you save locally are written to `data/deals.json`.
 
+```bash
+npm test
+npm run typecheck
+```
+
 ## Admin
 
 `/admin` is a one-screen backend:
@@ -32,7 +37,7 @@ This repo is already set up for Netlify (`netlify.toml`, functions, SPA routing)
 
 1. Push this GitHub repo.
 2. In Netlify: **Add new site → Import an existing project**.
-3. Set the environment variable `ADMIN_PASSWORD` (do not leave the local default live).
+3. Set the environment variable `ADMIN_PASSWORD` to a strong unique value. Production refuses `admin`.
 4. Deploy.
 
 After the first deploy, new deals are stored in Netlify Blobs so they persist across publishes. The sample deals ship with the app so the homepage is not empty on first load.
@@ -48,3 +53,5 @@ After the first deploy, new deals are stored in Netlify Blobs so they persist ac
 | GET | `/api/logo?name=&url=` | no | Brand logo search |
 | POST | `/api/login` | password | Admin session |
 | POST | `/api/logout` | cookie | Sign out |
+
+Login is rate-limited. Affiliate URLs must be public `http(s)` hosts. Logo URLs are limited to known CDNs.
