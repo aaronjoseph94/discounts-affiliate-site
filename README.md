@@ -23,8 +23,8 @@ npm run typecheck
 
 `/admin` is a one-screen backend. Edit the homepage title and logo, then add deals:
 
-1. Site title
-2. Site logo (PNG, JPG, or WebP)
+1. Title
+2. Logo (PNG, JPG, or WebP)
 3. Product name
 4. Affiliate URL (optional)
 5. Discount code (optional)

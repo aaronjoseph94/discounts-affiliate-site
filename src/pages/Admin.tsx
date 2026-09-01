@@ -306,7 +306,7 @@ export function Admin() {
       <h2 className="admin-heading">Site</h2>
       <form className="card-form" onSubmit={(event) => void handleSiteSave(event)}>
         <label>
-          Site title
+          Title
           <input
             value={siteTitle}
             onChange={(event) => setSiteTitle(event.target.value)}
@@ -316,9 +316,9 @@ export function Admin() {
           />
         </label>
         <div className="site-logo-field">
-          <p className="logo-kicker">Site logo</p>
+          <p className="field-label">Logo</p>
           <div className="site-logo-row">
-            <img className="site-logo-preview" src={logoPreviewSrc()} alt="Site logo preview" />
+            <img className="site-logo-preview" src={logoPreviewSrc()} alt="Logo preview" />
             <label className="file-btn">
               Choose file
               <input
