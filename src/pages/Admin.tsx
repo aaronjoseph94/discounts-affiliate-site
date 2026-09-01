@@ -8,10 +8,12 @@ import {
   deleteDeal,
   getDeals,
   getSession,
+  getSettings,
   login,
   logout,
   searchLogos,
   updateDeal,
+  updateSettings,
 } from "../lib/api.ts";
 import type { Deal, LogoHit } from "../lib/types.ts";
 
@@ -33,6 +35,8 @@ export function Admin() {
   const [picked, setPicked] = useState<LogoHit | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [siteTitle, setSiteTitle] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
   const { message, showToast } = useToast();
 
   useEffect(() => {
@@ -53,7 +57,13 @@ export function Admin() {
   }, []);
 
   useEffect(() => {
-    if (authed) void refreshDeals();
+    if (!authed) return;
+    void refreshDeals();
+    void getSettings()
+      .then(({ settings }) => setSiteTitle(settings.title))
+      .catch(() => {
+        setError("Could not load site title");
+      });
   }, [authed]);
 
   useEffect(() => {
@@ -183,9 +193,6 @@ export function Admin() {
           </Link>
           <h1>Admin</h1>
           <p className="lede">Add brands, codes, and affiliate links.</p>
-          {import.meta.env.DEV ? (
-            <p className="lede">Local default password is <code>admin</code>.</p>
-          ) : null}
         </header>
         <form className="card-form" onSubmit={(event) => void handleLogin(event)}>
           <label>
@@ -227,6 +234,37 @@ export function Admin() {
         <h1>{editingId ? "Edit deal" : "Add a deal"}</h1>
         <p className="lede">Type a product name. The brand logo is pulled in automatically.</p>
       </header>
+
+      <form
+        className="card-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSavingTitle(true);
+          void updateSettings({ title: siteTitle })
+            .then(({ settings }) => {
+              setSiteTitle(settings.title);
+              showToast("Title saved");
+            })
+            .catch((err) => {
+              setError(err instanceof Error ? err.message : "Could not save title");
+            })
+            .finally(() => setSavingTitle(false));
+        }}
+      >
+        <label>
+          Site title
+          <input
+            value={siteTitle}
+            onChange={(event) => setSiteTitle(event.target.value)}
+            maxLength={140}
+            required
+            autoComplete="off"
+          />
+        </label>
+        <button className="btn btn-primary" type="submit" disabled={savingTitle || !siteTitle.trim()}>
+          {savingTitle ? "Saving…" : "Save title"}
+        </button>
+      </form>
 
       <form className="card-form" onSubmit={(event) => void handleSave(event)}>
         <div className="logo-preview">

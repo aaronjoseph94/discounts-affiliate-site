@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { DealCard } from "../components/DealCard.tsx";
 import { Toast } from "../components/Toast.tsx";
 import { useToast } from "../hooks/useToast.ts";
-import { getDeals } from "../lib/api.ts";
+import { getDeals, getSettings } from "../lib/api.ts";
 import type { Deal } from "../lib/types.ts";
+
+const fallbackTitle = "Discount codes and affiliate deals, ready to copy.";
 
 export function Home() {
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [title, setTitle] = useState(fallbackTitle);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -15,9 +17,12 @@ export function Home() {
 
   useEffect(() => {
     let alive = true;
-    getDeals()
-      .then(({ deals: next }) => {
-        if (alive) setDeals(next);
+    Promise.all([getDeals(), getSettings()])
+      .then(([{ deals: next }, { settings }]) => {
+        if (!alive) return;
+        setDeals(next);
+        setTitle(settings.title || fallbackTitle);
+        document.title = settings.title || fallbackTitle;
       })
       .catch((err: unknown) => {
         if (alive) setError(err instanceof Error ? err.message : "Could not load deals");
@@ -41,13 +46,7 @@ export function Home() {
   return (
     <div className="page">
       <header className="hero">
-        <div className="hero-row">
-          <p className="eyebrow">Codes</p>
-          <Link className="admin-link" to="/admin">
-            Add deals
-          </Link>
-        </div>
-        <h1>Discount codes and affiliate deals, ready to copy.</h1>
+        <h1>{title}</h1>
         <label className="search">
           <span className="sr-only">Search deals</span>
           <input
@@ -67,12 +66,7 @@ export function Home() {
       {!loading && filtered.length === 0 ? (
         <div className="empty">
           <h2>{query ? "No matches" : "No deals yet"}</h2>
-          <p>{query ? "Try a brand name or code." : "Add your first deal from the admin page."}</p>
-          {!query ? (
-            <Link className="btn btn-primary" to="/admin">
-              Open admin
-            </Link>
-          ) : null}
+          <p>{query ? "Try a brand name or code." : "Check back soon."}</p>
         </div>
       ) : (
         <section className="deal-grid" aria-live="polite">

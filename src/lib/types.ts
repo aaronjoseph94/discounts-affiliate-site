@@ -1,1 +1,1 @@
-export type { Deal, DealInput, LogoHit } from "../../shared/types.ts";
+export type { Deal, DealInput, LogoHit, SiteSettings } from "../../shared/types.ts";

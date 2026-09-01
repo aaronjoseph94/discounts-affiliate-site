@@ -1,4 +1,4 @@
-import type { Deal, DealInput, LogoHit } from "./types.ts";
+import type { Deal, DealInput, LogoHit, SiteSettings } from "./types.ts";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -12,6 +12,18 @@ async function readJson<T>(res: Response): Promise<T> {
 
 export function getDeals(): Promise<{ deals: Deal[] }> {
   return fetch("/api/deals").then((res) => readJson(res));
+}
+
+export function getSettings(): Promise<{ settings: SiteSettings }> {
+  return fetch("/api/settings").then((res) => readJson(res));
+}
+
+export function updateSettings(settings: SiteSettings): Promise<{ settings: SiteSettings }> {
+  return fetch("/api/settings", {
+    method: "PATCH",
+    headers: jsonHeaders,
+    body: JSON.stringify(settings),
+  }).then((res) => readJson(res));
 }
 
 export function login(password: string): Promise<{ ok: true }> {

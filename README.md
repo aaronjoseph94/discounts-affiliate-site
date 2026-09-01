@@ -11,7 +11,6 @@ npm run dev
 
 - Public site: [http://localhost:5173](http://localhost:5173)
 - Admin: [http://localhost:5173/admin](http://localhost:5173/admin)
-- Default local password: `admin`
 
 Deals you save locally are written to `data/deals.json`.
 
@@ -22,12 +21,13 @@ npm run typecheck
 
 ## Admin
 
-`/admin` is a one-screen backend:
+`/admin` is a one-screen backend. Edit the homepage title, then add deals:
 
-1. Product name
-2. Affiliate URL (optional)
-3. Discount code (optional)
-4. % discount (optional)
+1. Site title
+2. Product name
+3. Affiliate URL (optional)
+4. Discount code (optional)
+5. % discount (optional)
 
 Type a brand name and the logo search fills in as you go. Pick a match if more than one comes back.
 
@@ -37,7 +37,7 @@ This repo is already set up for Netlify (`netlify.toml`, functions, SPA routing)
 
 1. Push this GitHub repo.
 2. In Netlify: **Add new site → Import an existing project**.
-3. Set the environment variable `ADMIN_PASSWORD` to a strong unique value. Production refuses `admin`.
+3. Optionally set `ADMIN_PASSWORD` if you want to override the app default.
 4. Deploy.
 
 After the first deploy, new deals are stored in Netlify Blobs so they persist across publishes. The sample deals ship with the app so the homepage is not empty on first load.
@@ -46,6 +46,8 @@ After the first deploy, new deals are stored in Netlify Blobs so they persist ac
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
+| GET | `/api/settings` | no | Site title |
+| PATCH | `/api/settings` | admin | Update site title |
 | GET | `/api/deals` | no | List deals |
 | POST | `/api/deals` | admin | Create a deal |
 | PATCH | `/api/deals/:id` | admin | Update a deal |

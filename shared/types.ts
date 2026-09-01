@@ -17,6 +17,10 @@ export type LogoHit = {
   logoUrl: string;
 };
 
+export type SiteSettings = {
+  title: string;
+};
+
 export type DealInput = {
   productName: string;
   affiliateUrl: string;

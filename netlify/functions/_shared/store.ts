@@ -3,13 +3,28 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
-import type { Deal, DealInput } from "../../../shared/types.ts";
+import type { Deal, DealInput, SiteSettings } from "../../../shared/types.ts";
 import { extractDomain, logoForDomain, searchLogos } from "./logo.ts";
 import { seedDeals } from "./seed.ts";
 import { normalizeDeal, sanitizeLogoUrl } from "./validate.ts";
 
 const KEY = "deals.json";
+const SETTINGS_KEY = "settings.json";
 const filePath = join(dirname(fileURLToPath(import.meta.url)), "../../../data/deals.json");
+const settingsPath = join(dirname(fileURLToPath(import.meta.url)), "../../../data/settings.json");
+
+export const defaultSettings: SiteSettings = {
+  title: "Discount codes and affiliate deals, ready to copy.",
+};
+
+function normalizeSettings(value: unknown): SiteSettings {
+  const title = String((value as { title?: unknown } | null)?.title ?? "")
+    // oxlint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, 140);
+  return { title: title || defaultSettings.title };
+}
 
 async function readBlobs(): Promise<Deal[] | null> {
   try {
@@ -72,6 +87,47 @@ export async function saveDeals(deals: Deal[]): Promise<void> {
   const blobsOk = await writeBlobs(clean);
   if (blobsOk) return;
   writeFileDeals(clean);
+}
+
+async function readSettingsBlobs(): Promise<unknown | null> {
+  try {
+    const { getStore } = await import("@netlify/blobs");
+    const store = getStore({ name: "deals-db", consistency: "strong" });
+    return await store.get(SETTINGS_KEY, { type: "json" });
+  } catch {
+    return null;
+  }
+}
+
+function readFileSettings(): unknown | null {
+  try {
+    if (!existsSync(settingsPath)) return null;
+    return JSON.parse(readFileSync(settingsPath, "utf8")) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+export async function getSettings(): Promise<SiteSettings> {
+  const fromBlobs = await readSettingsBlobs();
+  if (fromBlobs) return normalizeSettings(fromBlobs);
+  const fromFile = readFileSettings();
+  if (fromFile) return normalizeSettings(fromFile);
+  return { ...defaultSettings };
+}
+
+export async function saveSettings(input: unknown): Promise<SiteSettings> {
+  const settings = normalizeSettings(input);
+  try {
+    const { getStore } = await import("@netlify/blobs");
+    const store = getStore({ name: "deals-db", consistency: "strong" });
+    await store.setJSON(SETTINGS_KEY, settings);
+    return settings;
+  } catch {
+    mkdirSync(dirname(settingsPath), { recursive: true });
+    writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`);
+    return settings;
+  }
 }
 
 export async function decorateDeal(input: DealInput, existing?: Deal): Promise<Deal> {

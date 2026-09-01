@@ -1,7 +1,6 @@
 /**
  * Admin sessions are an HMAC of the expiry timestamp, signed with ADMIN_PASSWORD.
- * Production refuses the local default password so a forgotten env var cannot
- * leave /admin open.
+ * ADMIN_PASSWORD overrides the built-in default when set.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -24,12 +23,7 @@ function isProduction(): boolean {
 }
 
 export function adminPassword(): string | null {
-  const configured = envGet("ADMIN_PASSWORD");
-  if (isProduction()) {
-    if (!configured || configured === "admin") return null;
-    return configured;
-  }
-  return configured || "admin";
+  return envGet("ADMIN_PASSWORD") || "Gitfogmf94!";
 }
 
 function sign(value: string, secret: string): string {

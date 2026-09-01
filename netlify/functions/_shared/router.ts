@@ -9,7 +9,7 @@ import {
 import { DealInputError, error, json } from "./http.ts";
 import { searchLogos } from "./logo.ts";
 import { clientKey, rateLimit } from "./rate-limit.ts";
-import { decorateDeal, listDeals, saveDeals } from "./store.ts";
+import { decorateDeal, getSettings, listDeals, saveDeals, saveSettings } from "./store.ts";
 import { validateDealInput } from "./validate.ts";
 
 const MAX_BODY_BYTES = 32_768;
@@ -83,6 +83,16 @@ export async function routeApi(req: Request): Promise<Response> {
       }
       const results = await searchLogos(url.searchParams.get("name") ?? "", url.searchParams.get("url") ?? "");
       return json({ results });
+    }
+
+    if (path === "/api/settings" && method === "GET") {
+      return json({ settings: await getSettings() });
+    }
+
+    if (path === "/api/settings" && method === "PATCH") {
+      const denied = await requireAdmin(req);
+      if (denied) return denied;
+      return json({ settings: await saveSettings(await readBody(req)) });
     }
 
     if (path === "/api/deals" && method === "GET") {

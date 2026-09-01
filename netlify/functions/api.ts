@@ -5,6 +5,6 @@ import { routeApi } from "./_shared/router.ts";
 export default async (req: Request) => routeApi(req);
 
 export const config: Config = {
-  path: ["/api/deals", "/api/deals/:id", "/api/login", "/api/logout", "/api/session", "/api/logo"],
+  path: ["/api/deals", "/api/deals/:id", "/api/login", "/api/logout", "/api/session", "/api/logo", "/api/settings"],
   method: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
 };
