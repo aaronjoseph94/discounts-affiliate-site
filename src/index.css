@@ -390,20 +390,54 @@ h2 {
   padding: 4px 0 6px;
 }
 
+.site-logo-field {
+  display: grid;
+  gap: 8px;
+}
+
+.site-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .site-logo-preview {
   display: block;
-  height: 52px;
+  height: 48px;
   width: auto;
-  max-width: min(240px, 100%);
+  min-width: 0;
+  max-width: min(200px, 55%);
   object-fit: contain;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: #fffdf8;
   border: 1px solid var(--line);
   border-radius: 14px;
 }
 
-.card-form input[type="file"] {
-  font-weight: 600;
+.file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: max-content;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  background: #efe8db;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.card-form .file-btn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }
 
 .logo-picks {

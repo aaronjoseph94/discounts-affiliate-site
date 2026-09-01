@@ -313,14 +313,22 @@ export function Admin() {
             autoComplete="off"
           />
         </label>
-        <div>
+        <div className="site-logo-field">
           <p className="logo-kicker">Site logo</p>
-          <img className="site-logo-preview" src={logoPreviewSrc()} alt="Site logo preview" />
+          <div className="site-logo-row">
+            <img className="site-logo-preview" src={logoPreviewSrc()} alt="Site logo preview" />
+            <label className="file-btn">
+              Choose file
+              <input
+                ref={logoInputRef}
+                className="sr-only"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={onLogoFile}
+              />
+            </label>
+          </div>
         </div>
-        <label>
-          Replace logo
-          <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onLogoFile} />
-        </label>
         <div className="deal-actions">
           <button className="btn btn-primary" type="submit" disabled={savingTitle || !siteTitle.trim()}>
             {savingTitle ? "Saving…" : "Save site"}
