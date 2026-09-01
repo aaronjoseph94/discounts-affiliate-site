@@ -25,6 +25,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  overflow-x: clip;
   background:
     radial-gradient(1200px 420px at 10% -10%, #fff7e6 0%, transparent 55%),
     var(--bg);
@@ -34,6 +35,8 @@ body {
   font-size: 16px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 #root {
@@ -42,8 +45,11 @@ body {
 
 button,
 input,
-a {
+a,
+.file-btn,
+.logo-pick {
   font: inherit;
+  touch-action: manipulation;
 }
 
 a {
@@ -73,9 +79,13 @@ h2,
 }
 
 .page {
-  width: min(920px, calc(100% - 28px));
+  width: min(920px, 100%);
   margin: 0 auto;
-  padding: 22px 0 calc(40px + env(safe-area-inset-bottom));
+  padding:
+    calc(22px + env(safe-area-inset-top, 0px))
+    max(14px, env(safe-area-inset-right, 0px))
+    calc(40px + env(safe-area-inset-bottom, 0px))
+    max(14px, env(safe-area-inset-left, 0px));
 }
 
 .hero {
@@ -299,7 +309,10 @@ h2,
 }
 
 .code-chip strong {
+  max-width: 70%;
   letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .btn,
@@ -445,6 +458,7 @@ h2,
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .logo-pick {
@@ -493,13 +507,16 @@ h2,
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(18px + env(safe-area-inset-bottom));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
+  max-width: min(360px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   background: #161410;
   color: #fffdf8;
   padding: 12px 16px;
   border-radius: 999px;
   font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
   box-shadow: var(--shadow);
   z-index: 20;
 }
@@ -518,7 +535,7 @@ h2,
   }
 
   .page {
-    padding-top: 36px;
+    padding-top: calc(36px + env(safe-area-inset-top, 0px));
   }
 
   .hero-panel {
@@ -531,11 +548,12 @@ h2,
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 560px) {
   .form-row,
   .deal-actions,
   .admin-row,
-  .hero-tools {
+  .hero-tools,
+  .site-logo-row {
     flex-direction: column;
     align-items: stretch;
   }
@@ -544,7 +562,20 @@ h2,
     justify-content: flex-start;
   }
 
+  .admin-row-actions .text-btn {
+    min-height: 44px;
+    padding-inline: 4px;
+  }
+
   .count {
     align-self: flex-start;
+  }
+
+  .site-logo-preview {
+    max-width: 100%;
+  }
+
+  .file-btn {
+    width: 100%;
   }
 }

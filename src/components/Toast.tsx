@@ -1,3 +1,4 @@
+/** Bottom status chip. Safe-area padding lives in CSS so it clears the home indicator. */
 type ToastProps = {
   message: string;
 };

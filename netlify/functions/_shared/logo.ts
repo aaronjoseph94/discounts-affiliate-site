@@ -1,6 +1,6 @@
 /** Brand logo lookup: domain from the affiliate URL, then Clearbit suggest. */
 import type { LogoHit } from "../../../shared/types.ts";
-import { isPublicDomain, normalizeDomain } from "./validate.ts";
+import { isPublicDomain, normalizeDomain, sanitizeLogoUrl } from "./validate.ts";
 
 export function extractDomain(raw: string): string | null {
   const trimmed = raw.trim();
@@ -37,7 +37,7 @@ export async function searchLogos(name: string, url: string): Promise<LogoHit[]>
     const key = normalizeDomain(hit.domain);
     if (!key || seen.has(key)) return;
     seen.add(key);
-    hits.push({ ...hit, domain: key, logoUrl: hit.logoUrl || logoForDomain(key) });
+    hits.push({ ...hit, domain: key, logoUrl: sanitizeLogoUrl(hit.logoUrl || logoForDomain(key), key) });
   };
 
   if (domain) {

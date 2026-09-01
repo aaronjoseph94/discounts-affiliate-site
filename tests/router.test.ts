@@ -63,6 +63,22 @@ describe("routeApi", () => {
     expect(await head.arrayBuffer()).toHaveProperty("byteLength", 0);
   });
 
+  it("keeps logo lookup behind the admin session", async () => {
+    const res = await routeApi(new Request("http://localhost/api/logo?name=Nike"));
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a cross-site write", async () => {
+    const res = await routeApi(
+      new Request("http://localhost/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Origin: "https://evil.example" },
+        body: JSON.stringify({ password: "nope" }),
+      }),
+    );
+    expect(res.status).toBe(403);
+  });
+
   it("rejects unknown API methods", async () => {
     const res = await routeApi(new Request("http://localhost/api/deals", { method: "PUT" }));
     expect(res.status).toBe(405);

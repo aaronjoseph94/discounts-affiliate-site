@@ -73,6 +73,10 @@ export function Home() {
                 onChange={(event) => setQuery(event.target.value)}
                 maxLength={80}
                 autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                inputMode="search"
                 enterKeyHint="search"
               />
             </label>

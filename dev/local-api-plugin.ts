@@ -27,16 +27,30 @@ function readBody(req: IncomingMessage): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let size = 0;
+    let done = false;
     req.on("data", (chunk: Buffer) => {
       size += chunk.length;
       if (size > max) {
-        reject(new Error("Payload too large"));
+        if (!done) {
+          done = true;
+          reject(new Error("Payload too large"));
+        }
         return;
       }
       chunks.push(chunk);
     });
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
+    req.on("end", () => {
+      if (!done) {
+        done = true;
+        resolve(Buffer.concat(chunks));
+      }
+    });
+    req.on("error", (err) => {
+      if (!done) {
+        done = true;
+        reject(err);
+      }
+    });
   });
 }
 
@@ -80,12 +94,13 @@ export function localApiPlugin(): Plugin {
           .then(routeApi)
           .then((response) => writeResponse(res, response))
           .catch((err: unknown) => {
-            console.error(err);
+            const tooLarge = err instanceof Error && err.message === "Payload too large";
             if (!res.headersSent) {
-              res.statusCode = 500;
+              res.statusCode = tooLarge ? 400 : 500;
               res.setHeader("Content-Type", "application/json");
-              res.end(JSON.stringify({ error: "Server error" }));
+              res.end(JSON.stringify({ error: tooLarge ? "Request is too large" : "Server error" }));
             }
+            if (!tooLarge) console.error(err);
           });
       });
     },

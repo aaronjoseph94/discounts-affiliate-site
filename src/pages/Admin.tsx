@@ -102,6 +102,13 @@ export function Admin() {
     };
   }, [authed, form.productName, form.affiliateUrl]);
 
+  function resetDealForm() {
+    setForm(blank);
+    setEditingId(null);
+    setHits([]);
+    setPicked(null);
+  }
+
   async function refreshDeals() {
     try {
       const { deals: next } = await getDeals();
@@ -146,10 +153,7 @@ export function Admin() {
         await createDeal(payload);
         showToast("Deal added");
       }
-      setForm(blank);
-      setEditingId(null);
-      setHits([]);
-      setPicked(null);
+      resetDealForm();
       await refreshDeals();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save deal");
@@ -225,11 +229,7 @@ export function Admin() {
     setError("");
     try {
       await deleteDeal(id);
-      if (editingId === id) {
-        setEditingId(null);
-        setForm(blank);
-        setPicked(null);
-      }
+      if (editingId === id) resetDealForm();
       await refreshDeals();
       showToast("Deal deleted");
     } catch (err) {
@@ -262,6 +262,8 @@ export function Admin() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              maxLength={200}
+              enterKeyHint="go"
               autoComplete="current-password"
               autoFocus
             />
@@ -289,10 +291,7 @@ export function Admin() {
               void logout()
                 .then(() => {
                   setAuthed(false);
-                  setForm(blank);
-                  setEditingId(null);
-                  setHits([]);
-                  setPicked(null);
+                  resetDealForm();
                   setError("");
                   setLogoDraft(null);
                 })
@@ -453,10 +452,7 @@ export function Admin() {
               className="btn btn-secondary"
               type="button"
               onClick={() => {
-                setEditingId(null);
-                setForm(blank);
-                setPicked(null);
-                setHits([]);
+                resetDealForm();
                 setError("");
               }}
             >

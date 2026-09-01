@@ -51,6 +51,17 @@ function dealIdFromPath(match: RegExpMatchArray): string | null {
   }
 }
 
+/** Same-origin writes only. Missing Origin is fine (curl, tests, same-site). */
+function sameSiteRequest(req: Request): boolean {
+  const origin = req.headers.get("origin");
+  if (!origin) return true;
+  try {
+    return new URL(origin).origin === new URL(req.url).origin;
+  } catch {
+    return false;
+  }
+}
+
 export async function routeApi(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname.replace(/\/+$/, "") || "/";
@@ -58,6 +69,10 @@ export async function routeApi(req: Request): Promise<Response> {
 
   if (method === "OPTIONS") {
     return new Response(null, { status: 204, headers: API_HEADERS });
+  }
+
+  if ((method === "POST" || method === "PATCH" || method === "DELETE") && !sameSiteRequest(req)) {
+    return error("Forbidden", 403);
   }
 
   try {
@@ -86,6 +101,8 @@ export async function routeApi(req: Request): Promise<Response> {
     }
 
     if (path === "/api/logo" && method === "GET") {
+      const denied = await requireAdmin(req);
+      if (denied) return denied;
       if (!rateLimit(`logo:${clientKey(req)}`, 30, 60 * 1000)) {
         return error("Too many logo lookups. Try again shortly.", 429);
       }
@@ -128,6 +145,9 @@ export async function routeApi(req: Request): Promise<Response> {
     if (path === "/api/deals" && method === "POST") {
       const denied = await requireAdmin(req);
       if (denied) return denied;
+      if (!rateLimit(`deals:${clientKey(req)}`, 40, 60 * 1000)) {
+        return error("Too many deal updates. Try again shortly.", 429);
+      }
       const deal = await decorateDeal(validateDealInput(await readBody(req)));
       const deals = await listDeals();
       if (deals.length >= MAX_DEALS) {
@@ -142,6 +162,9 @@ export async function routeApi(req: Request): Promise<Response> {
     if (dealMatch && method === "PATCH") {
       const denied = await requireAdmin(req);
       if (denied) return denied;
+      if (!rateLimit(`deals:${clientKey(req)}`, 40, 60 * 1000)) {
+        return error("Too many deal updates. Try again shortly.", 429);
+      }
       const id = dealIdFromPath(dealMatch);
       if (!id) return error("Deal not found", 404);
       const deals = await listDeals();
@@ -168,6 +191,9 @@ export async function routeApi(req: Request): Promise<Response> {
     if (dealMatch && method === "DELETE") {
       const denied = await requireAdmin(req);
       if (denied) return denied;
+      if (!rateLimit(`deals:${clientKey(req)}`, 40, 60 * 1000)) {
+        return error("Too many deal updates. Try again shortly.", 429);
+      }
       const id = dealIdFromPath(dealMatch);
       if (!id) return error("Deal not found", 404);
       const deals = await listDeals();
