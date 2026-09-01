@@ -46,8 +46,9 @@ export function Admin() {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const { message, showToast } = useToast();
 
+  document.title = pageTitle("Admin");
+
   useEffect(() => {
-    document.title = pageTitle("Admin");
     let alive = true;
     getSession()
       .then(({ authenticated }) => {

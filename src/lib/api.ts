@@ -1,4 +1,5 @@
 /** Thin fetch wrapper. Same-origin so the admin cookie rides along. */
+import { writeSiteCache } from "./site-cache.ts";
 import type { Deal, DealInput, LogoHit, SiteSettings } from "./types.ts";
 
 const jsonHeaders = { "Content-Type": "application/json" };
@@ -20,7 +21,12 @@ export function getDeals(): Promise<{ deals: Deal[] }> {
 }
 
 export function getSettings(): Promise<{ settings: SiteSettings }> {
-  return api("/api/settings").then((res) => readJson(res));
+  return api("/api/settings")
+    .then((res) => readJson<{ settings: SiteSettings }>(res))
+    .then((data) => {
+      writeSiteCache(data.settings);
+      return data;
+    });
 }
 
 export function updateSettings(settings: Partial<SiteSettings>): Promise<{ settings: SiteSettings }> {
@@ -28,7 +34,12 @@ export function updateSettings(settings: Partial<SiteSettings>): Promise<{ setti
     method: "PATCH",
     headers: jsonHeaders,
     body: JSON.stringify(settings),
-  }).then((res) => readJson(res));
+  })
+    .then((res) => readJson<{ settings: SiteSettings }>(res))
+    .then((data) => {
+      writeSiteCache(data.settings);
+      return data;
+    });
 }
 
 export function login(password: string): Promise<{ ok: true }> {

@@ -5,20 +5,22 @@ import { Toast } from "../components/Toast.tsx";
 import { useToast } from "../hooks/useToast.ts";
 import { getDeals, getSettings } from "../lib/api.ts";
 import { DEFAULT_TAGLINE, SITE_NAME, pageTitle } from "../lib/brand.ts";
+import { readSiteCache } from "../lib/site-cache.ts";
 import type { Deal } from "../lib/types.ts";
 
 export function Home() {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [title, setTitle] = useState(DEFAULT_TAGLINE);
-  const [logoUrl, setLogoUrl] = useState("/logo.png");
+  const [title, setTitle] = useState(() => readSiteCache()?.title ?? "");
+  const [logoUrl, setLogoUrl] = useState(() => readSiteCache()?.logoUrl ?? "/logo.png");
   const [logoFailed, setLogoFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { message, showToast } = useToast();
 
+  document.title = pageTitle();
+
   useEffect(() => {
-    document.title = pageTitle();
     let alive = true;
     Promise.allSettled([getDeals(), getSettings()]).then(([dealsRes, settingsRes]) => {
       if (!alive) return;
@@ -31,6 +33,8 @@ export function Home() {
         setTitle(settingsRes.value.settings.title || DEFAULT_TAGLINE);
         setLogoUrl(settingsRes.value.settings.logoUrl || "/logo.png");
         setLogoFailed(false);
+      } else {
+        setTitle((current) => current || DEFAULT_TAGLINE);
       }
     }).finally(() => {
       if (alive) setLoading(false);
@@ -58,7 +62,7 @@ export function Home() {
             alt={SITE_NAME}
             onError={() => setLogoFailed(true)}
           />
-          <h1>{title}</h1>
+          <h1>{title || "\u00a0"}</h1>
           <div className="hero-tools">
             <label className="search">
               <span className="sr-only">Search deals</span>
