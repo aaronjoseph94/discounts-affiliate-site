@@ -13,6 +13,17 @@ describe("routeApi", () => {
     expect(res.status).toBe(401);
   });
 
+  it("rejects a non-JSON content type", async () => {
+    const res = await routeApi(
+      new Request("http://localhost/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: "password=nope",
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("rejects invalid JSON", async () => {
     const res = await routeApi(
       new Request("http://localhost/api/login", {

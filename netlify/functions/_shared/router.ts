@@ -7,7 +7,7 @@ import {
   passwordsMatch,
   sessionCookie,
 } from "./auth.ts";
-import { DealInputError, error, json } from "./http.ts";
+import { API_HEADERS, DealInputError, error, json } from "./http.ts";
 import { searchLogos } from "./logo.ts";
 import { clientKey, rateLimit } from "./rate-limit.ts";
 import { getSettings, readSiteLogo, saveSettings } from "./settings.ts";
@@ -26,6 +26,10 @@ async function requireAdmin(req: Request): Promise<Response | null> {
 }
 
 async function readBody(req: Request, max = MAX_BODY_BYTES): Promise<unknown> {
+  const type = req.headers.get("content-type") ?? "";
+  if (type && !type.toLowerCase().includes("application/json")) {
+    throw new DealInputError("Invalid JSON");
+  }
   const raw = await req.text();
   if (raw.length > max) {
     throw new DealInputError("Request is too large");
@@ -53,7 +57,7 @@ export async function routeApi(req: Request): Promise<Response> {
   const method = req.method.toUpperCase();
 
   if (method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+    return new Response(null, { status: 204, headers: API_HEADERS });
   }
 
   try {
@@ -117,7 +121,7 @@ export async function routeApi(req: Request): Promise<Response> {
 
     if (path === "/api/deals" && method === "GET") {
       const deals = await listDeals();
-      deals.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+      deals.sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
       return json({ deals });
     }
 

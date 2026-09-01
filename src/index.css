@@ -145,7 +145,6 @@ h2,
   gap: 12px;
 }
 
-.eyebrow,
 .logo-kicker,
 .count,
 .deal-domain,
@@ -153,14 +152,6 @@ h2,
 .code-label,
 .code-missing {
   color: var(--muted);
-}
-
-.eyebrow {
-  margin: 0;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.78rem;
 }
 
 .lede {

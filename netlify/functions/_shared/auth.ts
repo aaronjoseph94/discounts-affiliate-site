@@ -1,10 +1,7 @@
-/**
- * Admin sessions are an HMAC of the expiry timestamp, signed with ADMIN_PASSWORD.
- * ADMIN_PASSWORD overrides the built-in default when set.
- */
+/** Signed cookie so /admin stays logged in without keeping the password around. */
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const COOKIE = "codes_session";
+const COOKIE = "dd_session";
 const DAY = 24 * 60 * 60;
 
 function envGet(name: string): string | undefined {

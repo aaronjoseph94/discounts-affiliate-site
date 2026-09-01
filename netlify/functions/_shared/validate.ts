@@ -1,4 +1,4 @@
-/** Sanitize deal fields so affiliate links and logos cannot point at private hosts. */
+/** Keep affiliate links on the public web and logos on hosts we trust. */
 import { DealInputError } from "./http.ts";
 import type { Deal, DealInput } from "../../../shared/types.ts";
 

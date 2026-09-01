@@ -1,4 +1,4 @@
-/** Site name used in tabs, headings, and the default homepage tagline. */
+/** One place for the name in the tab and the default homepage line. */
 export const SITE_NAME = "Discounts & Deals";
 export const DEFAULT_TAGLINE = "Discount codes and affiliate deals, ready to copy.";
 

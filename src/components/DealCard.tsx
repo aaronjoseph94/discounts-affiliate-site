@@ -14,25 +14,30 @@ export function DealCard({ deal, onCopied }: DealCardProps) {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  async function copyCode() {
+  function copyCode() {
     if (!deal.discountCode) return;
-    try {
-      await navigator.clipboard.writeText(deal.discountCode);
-    } catch {
-      const field = document.createElement("textarea");
-      field.value = deal.discountCode;
-      field.setAttribute("readonly", "");
-      field.style.position = "fixed";
-      field.style.left = "-9999px";
-      document.body.appendChild(field);
-      field.select();
-      document.execCommand("copy");
-      field.remove();
-    }
+    const code = deal.discountCode;
+    // Don't wait on the clipboard API — it can hang when permission is blocked.
     setCopied(true);
-    onCopied(`Copied ${deal.discountCode}`);
+    onCopied(`Copied ${code}`);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopied(false), 1600);
+
+    void (async () => {
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch {
+        const field = document.createElement("textarea");
+        field.value = code;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.left = "-9999px";
+        document.body.appendChild(field);
+        field.select();
+        document.execCommand("copy");
+        field.remove();
+      }
+    })();
   }
 
   return (

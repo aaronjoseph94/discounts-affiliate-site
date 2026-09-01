@@ -1,9 +1,10 @@
-/** Deal persistence: Netlify Blobs in production, data/deals.json locally. */
+/** Deals live in Netlify Blobs in production, or data/deals.json on your machine. */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import type { Deal, DealInput } from "../../../shared/types.ts";
+import { siteStore } from "./blobs.ts";
 import { extractDomain, logoForDomain, searchLogos } from "./logo.ts";
 import { seedDeals } from "./seed.ts";
 import { normalizeDeal, sanitizeLogoUrl } from "./validate.ts";
@@ -15,8 +16,7 @@ export const MAX_DEALS = 250;
 
 async function readBlobs(): Promise<Deal[] | null> {
   try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore({ name: "deals-db", consistency: "strong" });
+    const store = await siteStore();
     const data = await store.get(KEY, { type: "json" });
     return Array.isArray(data) ? data : null;
   } catch {
@@ -26,8 +26,7 @@ async function readBlobs(): Promise<Deal[] | null> {
 
 async function writeBlobs(deals: Deal[]): Promise<boolean> {
   try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore({ name: "deals-db", consistency: "strong" });
+    const store = await siteStore();
     await store.setJSON(KEY, deals);
     return true;
   } catch {

@@ -1,10 +1,11 @@
-/** Public deal list with search, copy-to-clipboard, and the editable site logo. */
+/** Public homepage: search deals, copy a code, tap through to the shop. */
 import { useEffect, useMemo, useState } from "react";
 import { DealCard } from "../components/DealCard.tsx";
 import { Toast } from "../components/Toast.tsx";
 import { useToast } from "../hooks/useToast.ts";
 import { getDeals, getSettings } from "../lib/api.ts";
-import { DEFAULT_TAGLINE, SITE_NAME, pageTitle, type Deal } from "../lib/types.ts";
+import { DEFAULT_TAGLINE, SITE_NAME, pageTitle } from "../lib/brand.ts";
+import type { Deal } from "../lib/types.ts";
 
 export function Home() {
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -17,22 +18,23 @@ export function Home() {
   const { message, showToast } = useToast();
 
   useEffect(() => {
+    document.title = pageTitle();
     let alive = true;
-    Promise.all([getDeals(), getSettings()])
-      .then(([{ deals: next }, { settings }]) => {
-        if (!alive) return;
-        setDeals(next);
-        setTitle(settings.title || DEFAULT_TAGLINE);
-        setLogoUrl(settings.logoUrl || "/logo.png");
+    Promise.allSettled([getDeals(), getSettings()]).then(([dealsRes, settingsRes]) => {
+      if (!alive) return;
+      if (dealsRes.status === "fulfilled") {
+        setDeals(dealsRes.value.deals);
+      } else {
+        setError(dealsRes.reason instanceof Error ? dealsRes.reason.message : "Could not load deals");
+      }
+      if (settingsRes.status === "fulfilled") {
+        setTitle(settingsRes.value.settings.title || DEFAULT_TAGLINE);
+        setLogoUrl(settingsRes.value.settings.logoUrl || "/logo.png");
         setLogoFailed(false);
-        document.title = pageTitle();
-      })
-      .catch((err: unknown) => {
-        if (alive) setError(err instanceof Error ? err.message : "Could not load deals");
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
+      }
+    }).finally(() => {
+      if (alive) setLoading(false);
+    });
     return () => {
       alive = false;
     };
@@ -69,6 +71,7 @@ export function Home() {
                 placeholder="Search brands or codes"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
+                maxLength={80}
                 autoComplete="off"
                 enterKeyHint="search"
               />
@@ -80,7 +83,7 @@ export function Home() {
 
       {error ? <p className="banner error">{error}</p> : null}
 
-      {!loading && filtered.length === 0 ? (
+      {loading ? null : filtered.length === 0 ? (
         <div className="empty">
           <h2>{query ? "No matches" : "No deals yet"}</h2>
           <p>{query ? "Try a brand name or code." : "Check back soon."}</p>

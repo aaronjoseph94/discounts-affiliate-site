@@ -1,7 +1,4 @@
-/**
- * In-memory limiter. On Netlify this is per isolate, which still
- * slows down casual brute force against /api/login and /api/logo.
- */
+/** In-memory cap. On Netlify each isolate has its own map, which is still enough to slow down login guessing. */
 
 type Bucket = { count: number; resetAt: number };
 

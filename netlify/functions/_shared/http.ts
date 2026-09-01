@@ -1,4 +1,4 @@
-/** Small JSON helpers plus conservative API security headers. */
+/** JSON responses plus the headers we want on every API call. */
 
 export const API_HEADERS = {
   "X-Content-Type-Options": "nosniff",

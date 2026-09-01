@@ -1,4 +1,4 @@
-/** Browser client for the /api router. Cookies stay same-origin. */
+/** Thin fetch wrapper. Same-origin so the admin cookie rides along. */
 import type { Deal, DealInput, LogoHit, SiteSettings } from "./types.ts";
 
 const jsonHeaders = { "Content-Type": "application/json" };

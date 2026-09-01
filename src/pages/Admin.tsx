@@ -1,4 +1,4 @@
-/** Password-gated admin: site title/logo plus deal CRUD. */
+/** One screen for the title, logo, and deals. Stay signed in with the session cookie. */
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { BrandLogo } from "../components/BrandLogo.tsx";
@@ -16,7 +16,9 @@ import {
   updateDeal,
   updateSettings,
 } from "../lib/api.ts";
-import { pageTitle, type Deal, type LogoHit } from "../lib/types.ts";
+import { pageTitle } from "../lib/brand.ts";
+import { logoFileError } from "../lib/logo-file.ts";
+import type { Deal, LogoHit } from "../lib/types.ts";
 
 const blank = {
   productName: "",
@@ -164,6 +166,7 @@ export function Admin() {
       discountCode: deal.discountCode,
       discountPercent: deal.discountPercent ? String(deal.discountPercent) : "",
     });
+    setHits([]);
     setPicked(deal.domain ? { name: deal.productName, domain: deal.domain, logoUrl: deal.logoUrl } : null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -177,13 +180,9 @@ export function Admin() {
   function onLogoFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (file.size > 700_000) {
-      setError("Logo must be under 700KB");
-      event.target.value = "";
-      return;
-    }
-    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
-      setError("Use a PNG, JPG, or WebP");
+    const problem = logoFileError(file);
+    if (problem) {
+      setError(problem);
       event.target.value = "";
       return;
     }
@@ -213,7 +212,7 @@ export function Admin() {
       setLogoDraft(null);
       setLogoTick(Date.now());
       if (logoInputRef.current) logoInputRef.current.value = "";
-      showToast("Site settings saved");
+      showToast("Saved");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save site settings");
     } finally {
@@ -288,7 +287,15 @@ export function Admin() {
             className="text-btn"
             onClick={() => {
               void logout()
-                .then(() => setAuthed(false))
+                .then(() => {
+                  setAuthed(false);
+                  setForm(blank);
+                  setEditingId(null);
+                  setHits([]);
+                  setPicked(null);
+                  setError("");
+                  setLogoDraft(null);
+                })
                 .catch((err) => {
                   setError(err instanceof Error ? err.message : "Could not sign out");
                 });

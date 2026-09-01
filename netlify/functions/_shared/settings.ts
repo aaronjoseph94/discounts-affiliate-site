@@ -1,9 +1,10 @@
-/** Homepage title and logo. Blobs in production, data/ files locally. */
+/** Homepage title and logo. Same Blobs store as deals; local files when Blobs is not available. */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULT_TAGLINE } from "../../../shared/brand.ts";
 import type { SiteSettings } from "../../../shared/types.ts";
+import { siteStore } from "./blobs.ts";
 import { DealInputError } from "./http.ts";
 
 const SETTINGS_KEY = "settings.json";
@@ -79,8 +80,7 @@ export function normalizeSettings(
 
 async function readSettingsBlobs(): Promise<unknown | null> {
   try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore({ name: "deals-db", consistency: "strong" });
+    const store = await siteStore();
     return await store.get(SETTINGS_KEY, { type: "json" });
   } catch {
     return null;
@@ -106,8 +106,7 @@ export async function getSettings(): Promise<SiteSettings> {
 
 async function persistSettings(settings: SiteSettings): Promise<SiteSettings> {
   try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore({ name: "deals-db", consistency: "strong" });
+    const store = await siteStore();
     await store.setJSON(SETTINGS_KEY, settings);
     return settings;
   } catch {
@@ -132,8 +131,7 @@ export function parseDataImage(dataUrl: string): { type: string; bytes: Buffer }
 export async function writeSiteLogo(dataUrl: string): Promise<string> {
   const { bytes, type } = parseDataImage(dataUrl);
   try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore({ name: "deals-db", consistency: "strong" });
+    const store = await siteStore();
     const payload = new ArrayBuffer(bytes.byteLength);
     new Uint8Array(payload).set(bytes);
     await store.set(LOGO_KEY, payload, { metadata: { contentType: type } });
@@ -146,8 +144,7 @@ export async function writeSiteLogo(dataUrl: string): Promise<string> {
 
 export async function readSiteLogo(): Promise<{ body: Buffer; type: string } | null> {
   try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore({ name: "deals-db", consistency: "strong" });
+    const store = await siteStore();
     const data = await store.get(LOGO_KEY, { type: "arrayBuffer" });
     if (data) {
       const body = Buffer.from(data);
