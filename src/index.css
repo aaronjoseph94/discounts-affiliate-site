@@ -74,9 +74,52 @@ h2 {
 }
 
 .hero {
-  display: grid;
-  gap: 14px;
   margin-bottom: 22px;
+}
+
+.hero-panel {
+  display: grid;
+  gap: 18px;
+  padding: 22px 20px 20px;
+  background:
+    linear-gradient(180deg, #fffdf9 0%, #f8f2e7 100%);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.hero-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: var(--good);
+}
+
+.hero h1 {
+  max-width: 13.5ch;
+  font-size: clamp(1.85rem, 8vw, 2.85rem);
+}
+
+.hero-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
 }
 
 .hero-row,
@@ -128,15 +171,30 @@ h2 {
   outline: none;
 }
 
+.search input {
+  padding-left: 44px;
+  border-radius: 999px;
+  background: #fff;
+}
+
 .search input:focus,
 .card-form input:focus {
   border-color: #c4b8a3;
-  box-shadow: 0 0 0 4px rgba(217, 72, 15, 0.08);
+  box-shadow: 0 0 0 4px rgba(15, 109, 69, 0.12);
 }
 
 .count {
   margin: 0;
-  font-size: 0.92rem;
+  flex-shrink: 0;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #efe8db;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .deal-grid {
@@ -412,17 +470,26 @@ h2 {
   .page {
     padding-top: 36px;
   }
+
+  .hero-panel {
+    padding: 28px 28px 24px;
+  }
 }
 
 @media (max-width: 420px) {
   .form-row,
   .deal-actions,
-  .admin-row {
+  .admin-row,
+  .hero-tools {
     flex-direction: column;
     align-items: stretch;
   }
 
   .admin-row-actions {
     justify-content: flex-start;
+  }
+
+  .count {
+    align-self: flex-start;
   }
 }
