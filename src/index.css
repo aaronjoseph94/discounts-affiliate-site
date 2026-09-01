@@ -88,12 +88,12 @@ h2 {
   box-shadow: var(--shadow);
 }
 
-.hero-mark {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  color: var(--good);
+.hero-logo {
+  display: block;
+  height: 58px;
+  width: auto;
+  max-width: min(320px, 100%);
+  object-fit: contain;
 }
 
 .hero h1 {
@@ -390,6 +390,22 @@ h2 {
   padding: 4px 0 6px;
 }
 
+.site-logo-preview {
+  display: block;
+  height: 52px;
+  width: auto;
+  max-width: min(240px, 100%);
+  object-fit: contain;
+  padding: 8px 12px;
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.card-form input[type="file"] {
+  font-weight: 600;
+}
+
 .logo-picks {
   display: flex;
   gap: 8px;
@@ -473,6 +489,11 @@ h2 {
 
   .hero-panel {
     padding: 28px 28px 24px;
+  }
+
+  .hero-logo {
+    height: 72px;
+    max-width: 380px;
   }
 }
 

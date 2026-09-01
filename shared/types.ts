@@ -19,6 +19,7 @@ export type LogoHit = {
 
 export type SiteSettings = {
   title: string;
+  logoUrl: string;
 };
 
 export type DealInput = {

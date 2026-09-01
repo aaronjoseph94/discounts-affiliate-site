@@ -10,6 +10,7 @@ const fallbackTitle = "Discount codes and affiliate deals, ready to copy.";
 export function Home() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [title, setTitle] = useState(fallbackTitle);
+  const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,6 +23,7 @@ export function Home() {
         if (!alive) return;
         setDeals(next);
         setTitle(settings.title || fallbackTitle);
+        setLogoUrl(settings.logoUrl || "/logo.png");
         document.title = settings.title || fallbackTitle;
       })
       .catch((err: unknown) => {
@@ -47,13 +49,7 @@ export function Home() {
     <div className="page">
       <header className="hero">
         <div className="hero-panel">
-          <div className="hero-mark" aria-hidden="true">
-            <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
-              <rect width="32" height="32" rx="9" fill="currentColor" />
-              <path d="M10 11h5.2c3 0 4.9 1.8 4.9 4.55S18.2 20.2 15.1 20.2H10V11Zm3.1 2.55v4h1.8c1.6 0 2.5-.85 2.5-2.05s-.9-1.95-2.5-1.95h-1.8Z" fill="#fffdf8" />
-              <circle cx="22.2" cy="21.2" r="3.1" stroke="#fffdf8" strokeWidth="2" />
-            </svg>
-          </div>
+          <img className="hero-logo" src={logoUrl} alt="Discounts & Deals" />
           <h1>{title}</h1>
           <div className="hero-tools">
             <label className="search">

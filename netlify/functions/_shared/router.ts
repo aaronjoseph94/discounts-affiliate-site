@@ -9,10 +9,11 @@ import {
 import { DealInputError, error, json } from "./http.ts";
 import { searchLogos } from "./logo.ts";
 import { clientKey, rateLimit } from "./rate-limit.ts";
-import { decorateDeal, getSettings, listDeals, saveDeals, saveSettings } from "./store.ts";
+import { decorateDeal, getSettings, listDeals, readSiteLogo, saveDeals, saveSettings } from "./store.ts";
 import { validateDealInput } from "./validate.ts";
 
 const MAX_BODY_BYTES = 32_768;
+const MAX_SETTINGS_BODY_BYTES = 900_000;
 
 async function requireAdmin(req: Request): Promise<Response | null> {
   if (isAuthenticated(req)) return null;
@@ -22,9 +23,9 @@ async function requireAdmin(req: Request): Promise<Response | null> {
   return error("Sign in to continue", 401);
 }
 
-async function readBody(req: Request): Promise<unknown> {
+async function readBody(req: Request, max = MAX_BODY_BYTES): Promise<unknown> {
   const raw = await req.text();
-  if (raw.length > MAX_BODY_BYTES) {
+  if (raw.length > max) {
     throw new DealInputError("Request is too large");
   }
   if (!raw) return {};
@@ -92,7 +93,19 @@ export async function routeApi(req: Request): Promise<Response> {
     if (path === "/api/settings" && method === "PATCH") {
       const denied = await requireAdmin(req);
       if (denied) return denied;
-      return json({ settings: await saveSettings(await readBody(req)) });
+      return json({ settings: await saveSettings(await readBody(req, MAX_SETTINGS_BODY_BYTES)) });
+    }
+
+    if (path === "/api/site-logo" && method === "GET") {
+      const logo = await readSiteLogo();
+      if (!logo) return error("Logo not found", 404);
+      return new Response(Uint8Array.from(logo.body), {
+        headers: {
+          "Content-Type": logo.type,
+          "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
     }
 
     if (path === "/api/deals" && method === "GET") {

@@ -46,8 +46,9 @@ After the first deploy, new deals are stored in Netlify Blobs so they persist ac
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| GET | `/api/settings` | no | Site title |
-| PATCH | `/api/settings` | admin | Update site title |
+| GET | `/api/settings` | no | Site title and logo URL |
+| PATCH | `/api/settings` | admin | Update site title and logo |
+| GET | `/api/site-logo` | no | Uploaded site logo |
 | GET | `/api/deals` | no | List deals |
 | POST | `/api/deals` | admin | Create a deal |
 | PATCH | `/api/deals/:id` | admin | Update a deal |

@@ -4,6 +4,7 @@ import type { Plugin } from "vite";
 import { routeApi } from "../netlify/functions/_shared/router.ts";
 
 const MAX_BODY_BYTES = 32_768;
+const MAX_SETTINGS_BODY_BYTES = 900_000;
 
 function toHeaders(req: IncomingMessage): Headers {
   const headers = new Headers();
@@ -14,15 +15,21 @@ function toHeaders(req: IncomingMessage): Headers {
   return headers;
 }
 
+function maxBodyBytes(url?: string): number {
+  const path = (url ?? "").split("?")[0];
+  return path === "/api/settings" ? MAX_SETTINGS_BODY_BYTES : MAX_BODY_BYTES;
+}
+
 function readBody(req: IncomingMessage): Promise<Buffer> {
   if (req.readableEnded) return Promise.resolve(Buffer.alloc(0));
+  const max = maxBodyBytes(req.url);
 
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let size = 0;
     req.on("data", (chunk: Buffer) => {
       size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
+      if (size > max) {
         reject(new Error("Payload too large"));
         return;
       }

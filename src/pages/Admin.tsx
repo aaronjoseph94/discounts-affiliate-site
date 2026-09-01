@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { BrandLogo } from "../components/BrandLogo.tsx";
 import { Toast } from "../components/Toast.tsx";
@@ -36,6 +36,9 @@ export function Admin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [siteTitle, setSiteTitle] = useState("");
+  const [siteLogo, setSiteLogo] = useState("/logo.png");
+  const [logoDraft, setLogoDraft] = useState<string | null>(null);
+  const [logoTick, setLogoTick] = useState(0);
   const [savingTitle, setSavingTitle] = useState(false);
   const { message, showToast } = useToast();
 
@@ -60,9 +63,12 @@ export function Admin() {
     if (!authed) return;
     void refreshDeals();
     void getSettings()
-      .then(({ settings }) => setSiteTitle(settings.title))
+      .then(({ settings }) => {
+        setSiteTitle(settings.title);
+        setSiteLogo(settings.logoUrl || "/logo.png");
+      })
       .catch(() => {
-        setError("Could not load site title");
+        setError("Could not load site settings");
       });
   }, [authed]);
 
@@ -159,6 +165,54 @@ export function Admin() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function logoPreviewSrc() {
+    if (logoDraft) return logoDraft;
+    if (siteLogo === "/api/site-logo") return `${siteLogo}?t=${logoTick}`;
+    return siteLogo;
+  }
+
+  function onLogoFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 700_000) {
+      setError("Logo must be under 700KB");
+      event.target.value = "";
+      return;
+    }
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      setError("Use a PNG, JPG, or WebP");
+      event.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setError("");
+      setLogoDraft(String(reader.result));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleSiteSave(event: FormEvent) {
+    event.preventDefault();
+    setSavingTitle(true);
+    setError("");
+    try {
+      const { settings } = await updateSettings({
+        title: siteTitle,
+        logoUrl: logoDraft ?? siteLogo,
+      });
+      setSiteTitle(settings.title);
+      setSiteLogo(settings.logoUrl);
+      setLogoDraft(null);
+      setLogoTick(Date.now());
+      showToast("Site settings saved");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save site settings");
+    } finally {
+      setSavingTitle(false);
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!window.confirm("Delete this deal?")) return;
     setError("");
@@ -235,22 +289,7 @@ export function Admin() {
         <p className="lede">Type a product name. The brand logo is pulled in automatically.</p>
       </header>
 
-      <form
-        className="card-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setSavingTitle(true);
-          void updateSettings({ title: siteTitle })
-            .then(({ settings }) => {
-              setSiteTitle(settings.title);
-              showToast("Title saved");
-            })
-            .catch((err) => {
-              setError(err instanceof Error ? err.message : "Could not save title");
-            })
-            .finally(() => setSavingTitle(false));
-        }}
-      >
+      <form className="card-form" onSubmit={(event) => void handleSiteSave(event)}>
         <label>
           Site title
           <input
@@ -261,9 +300,31 @@ export function Admin() {
             autoComplete="off"
           />
         </label>
-        <button className="btn btn-primary" type="submit" disabled={savingTitle || !siteTitle.trim()}>
-          {savingTitle ? "Saving…" : "Save title"}
-        </button>
+        <div>
+          <p className="logo-kicker">Site logo</p>
+          <img className="site-logo-preview" src={logoPreviewSrc()} alt="Site logo preview" />
+        </div>
+        <label>
+          Replace logo
+          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onLogoFile} />
+        </label>
+        {error ? <p className="banner error">{error}</p> : null}
+        <div className="deal-actions">
+          <button className="btn btn-primary" type="submit" disabled={savingTitle || !siteTitle.trim()}>
+            {savingTitle ? "Saving…" : "Save site"}
+          </button>
+          <button
+            className="btn btn-secondary"
+            type="button"
+            disabled={savingTitle || (siteLogo === "/logo.png" && !logoDraft)}
+            onClick={() => {
+              setLogoDraft(null);
+              setSiteLogo("/logo.png");
+            }}
+          >
+            Use default logo
+          </button>
+        </div>
       </form>
 
       <form className="card-form" onSubmit={(event) => void handleSave(event)}>

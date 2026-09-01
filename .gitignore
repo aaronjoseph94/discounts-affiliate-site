@@ -16,6 +16,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+data/site-logo.png
 
 # Editor directories and files
 .vscode/*

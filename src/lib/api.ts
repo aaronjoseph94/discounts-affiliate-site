@@ -18,7 +18,7 @@ export function getSettings(): Promise<{ settings: SiteSettings }> {
   return fetch("/api/settings").then((res) => readJson(res));
 }
 
-export function updateSettings(settings: SiteSettings): Promise<{ settings: SiteSettings }> {
+export function updateSettings(settings: Partial<SiteSettings>): Promise<{ settings: SiteSettings }> {
   return fetch("/api/settings", {
     method: "PATCH",
     headers: jsonHeaders,
