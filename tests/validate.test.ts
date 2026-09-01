@@ -27,8 +27,11 @@ describe("normalizeHttpUrl", () => {
 
   it("rejects localhost and private hosts", () => {
     expect(() => normalizeHttpUrl("http://127.0.0.1")).toThrow(DealInputError);
+    expect(() => normalizeHttpUrl("http://127.0.0.2")).toThrow(DealInputError);
     expect(() => normalizeHttpUrl("http://192.168.1.10")).toThrow(DealInputError);
     expect(() => normalizeHttpUrl("http://localhost:3000")).toThrow(DealInputError);
+    expect(() => normalizeHttpUrl("http://[::1]/")).toThrow(DealInputError);
+    expect(() => normalizeHttpUrl("http://[fd12:3456:789a:1::1]/")).toThrow(DealInputError);
   });
 });
 
@@ -55,6 +58,11 @@ describe("validateDealInput", () => {
     });
     expect(deal.productName).toBe("Nike");
     expect(deal.discountPercent).toBe(100);
+  });
+
+  it("treats a zero percent as empty", () => {
+    const deal = validateDealInput({ productName: "Nike", discountCode: "SAVE", discountPercent: 0 });
+    expect(deal.discountPercent).toBeNull();
   });
 });
 

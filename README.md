@@ -21,13 +21,14 @@ npm run typecheck
 
 ## Admin
 
-`/admin` is a one-screen backend. Edit the homepage title, then add deals:
+`/admin` is a one-screen backend. Edit the homepage title and logo, then add deals:
 
 1. Site title
-2. Product name
-3. Affiliate URL (optional)
-4. Discount code (optional)
-5. % discount (optional)
+2. Site logo (PNG, JPG, or WebP)
+3. Product name
+4. Affiliate URL (optional)
+5. Discount code (optional)
+6. % discount (optional)
 
 Type a brand name and the logo search fills in as you go. Pick a match if more than one comes back.
 
@@ -37,7 +38,7 @@ This repo is already set up for Netlify (`netlify.toml`, functions, SPA routing)
 
 1. Push this GitHub repo.
 2. In Netlify: **Add new site → Import an existing project**.
-3. Optionally set `ADMIN_PASSWORD` if you want to override the app default.
+3. Set `ADMIN_PASSWORD` in the Netlify site environment (required for production).
 4. Deploy.
 
 After the first deploy, new deals are stored in Netlify Blobs so they persist across publishes. The sample deals ship with the app so the homepage is not empty on first load.

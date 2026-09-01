@@ -1,3 +1,4 @@
+/** One router for Netlify Functions and the local Vite API plugin. */
 import {
   adminPassword,
   clearSessionCookie,
@@ -9,7 +10,8 @@ import {
 import { DealInputError, error, json } from "./http.ts";
 import { searchLogos } from "./logo.ts";
 import { clientKey, rateLimit } from "./rate-limit.ts";
-import { decorateDeal, getSettings, listDeals, readSiteLogo, saveDeals, saveSettings } from "./store.ts";
+import { getSettings, readSiteLogo, saveSettings } from "./settings.ts";
+import { decorateDeal, listDeals, MAX_DEALS, saveDeals } from "./store.ts";
 import { validateDealInput } from "./validate.ts";
 
 const MAX_BODY_BYTES = 32_768;
@@ -68,7 +70,8 @@ export async function routeApi(req: Request): Promise<Response> {
         return error("Set ADMIN_PASSWORD in Netlify before using the admin.", 503);
       }
       const body = (await readBody(req)) as { password?: unknown };
-      if (!passwordsMatch(String(body.password ?? ""), secret)) {
+      const password = String(body.password ?? "").slice(0, 200);
+      if (!passwordsMatch(password, secret)) {
         return error("Wrong password", 401);
       }
       return json({ ok: true }, 200, { "Set-Cookie": sessionCookie(req, createSessionToken(secret)) });
@@ -93,19 +96,23 @@ export async function routeApi(req: Request): Promise<Response> {
     if (path === "/api/settings" && method === "PATCH") {
       const denied = await requireAdmin(req);
       if (denied) return denied;
+      if (!rateLimit(`settings:${clientKey(req)}`, 20, 60 * 1000)) {
+        return error("Too many settings updates. Try again shortly.", 429);
+      }
       return json({ settings: await saveSettings(await readBody(req, MAX_SETTINGS_BODY_BYTES)) });
     }
 
-    if (path === "/api/site-logo" && method === "GET") {
+    if (path === "/api/site-logo" && (method === "GET" || method === "HEAD")) {
       const logo = await readSiteLogo();
       if (!logo) return error("Logo not found", 404);
-      return new Response(Uint8Array.from(logo.body), {
-        headers: {
-          "Content-Type": logo.type,
-          "Cache-Control": "no-store",
-          "X-Content-Type-Options": "nosniff",
-        },
-      });
+      const headers = {
+        "Content-Type": logo.type,
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Cross-Origin-Resource-Policy": "same-origin",
+      };
+      if (method === "HEAD") return new Response(null, { headers });
+      return new Response(Uint8Array.from(logo.body), { headers });
     }
 
     if (path === "/api/deals" && method === "GET") {
@@ -119,6 +126,9 @@ export async function routeApi(req: Request): Promise<Response> {
       if (denied) return denied;
       const deal = await decorateDeal(validateDealInput(await readBody(req)));
       const deals = await listDeals();
+      if (deals.length >= MAX_DEALS) {
+        throw new DealInputError("Deal list is full. Delete some first.");
+      }
       deals.unshift(deal);
       await saveDeals(deals);
       return json({ deal }, 201);

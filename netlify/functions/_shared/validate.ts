@@ -1,3 +1,4 @@
+/** Sanitize deal fields so affiliate links and logos cannot point at private hosts. */
 import { DealInputError } from "./http.ts";
 import type { Deal, DealInput } from "../../../shared/types.ts";
 
@@ -12,10 +13,10 @@ const LOGO_HOSTS = new Set([
 
 function isPrivateHost(host: string): boolean {
   const hostname = host.toLowerCase();
-  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0" || hostname === "::1") {
-    return true;
-  }
+  if (hostname.includes(":")) return true;
+  if (hostname === "localhost" || hostname === "0.0.0.0") return true;
   if (hostname.endsWith(".localhost") || hostname.endsWith(".local")) return true;
+  if (/^127(?:\.\d{1,3}){3}$/.test(hostname)) return true;
   if (/^10(?:\.\d{1,3}){3}$/.test(hostname)) return true;
   if (/^192\.168(?:\.\d{1,3}){2}$/.test(hostname)) return true;
   if (/^172\.(1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}$/.test(hostname)) return true;
@@ -93,8 +94,8 @@ function cleanText(value: unknown, max: number): string {
 function cleanPercent(value: unknown): number | null {
   if (value === "" || value == null) return null;
   const num = Number(value);
-  if (!Number.isFinite(num)) return null;
-  return Math.min(100, Math.max(1, Math.round(num)));
+  if (!Number.isFinite(num) || num < 1) return null;
+  return Math.min(100, Math.round(num));
 }
 
 export function validateDealInput(body: unknown): DealInput {

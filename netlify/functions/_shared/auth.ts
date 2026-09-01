@@ -22,8 +22,14 @@ function isProduction(): boolean {
   return context === "production";
 }
 
+const LOCAL_DEV_PASSWORD = "Gitfogmf94!";
+
 export function adminPassword(): string | null {
-  return envGet("ADMIN_PASSWORD") || "Gitfogmf94!";
+  const fromEnv = envGet("ADMIN_PASSWORD")?.trim();
+  if (fromEnv) return fromEnv;
+  // Public repo: never ship the local default as the production secret.
+  if (envGet("CONTEXT") === "production") return null;
+  return LOCAL_DEV_PASSWORD;
 }
 
 function sign(value: string, secret: string): string {
@@ -45,7 +51,9 @@ export function createSessionToken(secret: string): string {
 
 export function sessionValid(token: string | undefined, secret: string): boolean {
   if (!token || !token.includes(".")) return false;
-  const [payload, sig] = token.split(".");
+  const parts = token.split(".");
+  if (parts.length !== 2) return false;
+  const [payload, sig] = parts;
   const exp = Number(payload);
   if (!payload || !sig || !Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) {
     return false;

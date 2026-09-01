@@ -1,3 +1,4 @@
+/** Public deal list with search, copy-to-clipboard, and the editable site logo. */
 import { useEffect, useMemo, useState } from "react";
 import { DealCard } from "../components/DealCard.tsx";
 import { Toast } from "../components/Toast.tsx";
@@ -11,6 +12,7 @@ export function Home() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [title, setTitle] = useState(fallbackTitle);
   const [logoUrl, setLogoUrl] = useState("/logo.png");
+  const [logoFailed, setLogoFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,6 +26,7 @@ export function Home() {
         setDeals(next);
         setTitle(settings.title || fallbackTitle);
         setLogoUrl(settings.logoUrl || "/logo.png");
+        setLogoFailed(false);
         document.title = settings.title || fallbackTitle;
       })
       .catch((err: unknown) => {
@@ -38,7 +41,7 @@ export function Home() {
   }, []);
 
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = query.trim().toLowerCase().slice(0, 80);
     if (!needle) return deals;
     return deals.filter((deal) =>
       [deal.productName, deal.discountCode, deal.domain, deal.affiliateUrl].join(" ").toLowerCase().includes(needle),
@@ -49,7 +52,12 @@ export function Home() {
     <div className="page">
       <header className="hero">
         <div className="hero-panel">
-          <img className="hero-logo" src={logoUrl} alt="Discounts & Deals" />
+          <img
+            className="hero-logo"
+            src={logoFailed ? "/logo.png" : logoUrl}
+            alt="Discounts & Deals"
+            onError={() => setLogoFailed(true)}
+          />
           <h1>{title}</h1>
           <div className="hero-tools">
             <label className="search">

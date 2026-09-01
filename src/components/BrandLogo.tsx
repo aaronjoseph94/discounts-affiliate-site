@@ -1,3 +1,4 @@
+/** Brand mark with CDN fallbacks, then initials if every image fails. */
 import { useState } from "react";
 
 type BrandLogoProps = {

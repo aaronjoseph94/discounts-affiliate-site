@@ -1,3 +1,4 @@
+/** Sample deals so a fresh deploy is not an empty homepage. */
 import type { Deal } from "../../../shared/types.ts";
 
 export const seedDeals: Deal[] = [

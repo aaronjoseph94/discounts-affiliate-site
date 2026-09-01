@@ -4,6 +4,8 @@ export const API_HEADERS = {
   "X-Content-Type-Options": "nosniff",
   "Cache-Control": "no-store",
   "Referrer-Policy": "no-referrer",
+  "Cross-Origin-Resource-Policy": "same-origin",
+  "Cross-Origin-Opener-Policy": "same-origin",
 };
 
 export function json(data: unknown, status = 200, extra?: HeadersInit): Response {

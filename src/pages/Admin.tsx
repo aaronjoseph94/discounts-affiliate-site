@@ -1,4 +1,5 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+/** Password-gated admin: site title/logo plus deal CRUD. */
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { BrandLogo } from "../components/BrandLogo.tsx";
 import { Toast } from "../components/Toast.tsx";
@@ -40,6 +41,7 @@ export function Admin() {
   const [logoDraft, setLogoDraft] = useState<string | null>(null);
   const [logoTick, setLogoTick] = useState(0);
   const [savingTitle, setSavingTitle] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const { message, showToast } = useToast();
 
   useEffect(() => {
@@ -129,7 +131,7 @@ export function Admin() {
       productName: form.productName,
       affiliateUrl: form.affiliateUrl,
       discountCode: form.discountCode,
-      discountPercent: form.discountPercent ? Number(form.discountPercent) : null,
+      discountPercent: form.discountPercent === "" ? null : Number(form.discountPercent),
       logoUrl: picked?.logoUrl,
       domain: picked?.domain,
     };
@@ -189,6 +191,10 @@ export function Admin() {
       setError("");
       setLogoDraft(String(reader.result));
     };
+    reader.onerror = () => {
+      setError("Could not read that image");
+      event.target.value = "";
+    };
     reader.readAsDataURL(file);
   }
 
@@ -205,6 +211,7 @@ export function Admin() {
       setSiteLogo(settings.logoUrl);
       setLogoDraft(null);
       setLogoTick(Date.now());
+      if (logoInputRef.current) logoInputRef.current.value = "";
       showToast("Site settings saved");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save site settings");
@@ -279,7 +286,11 @@ export function Admin() {
             type="button"
             className="text-btn"
             onClick={() => {
-              void logout().then(() => setAuthed(false));
+              void logout()
+                .then(() => setAuthed(false))
+                .catch((err) => {
+                  setError(err instanceof Error ? err.message : "Could not sign out");
+                });
             }}
           >
             Sign out
@@ -288,6 +299,8 @@ export function Admin() {
         <h1>{editingId ? "Edit deal" : "Add a deal"}</h1>
         <p className="lede">Type a product name. The brand logo is pulled in automatically.</p>
       </header>
+
+      {error ? <p className="banner error">{error}</p> : null}
 
       <form className="card-form" onSubmit={(event) => void handleSiteSave(event)}>
         <label>
@@ -306,9 +319,8 @@ export function Admin() {
         </div>
         <label>
           Replace logo
-          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onLogoFile} />
+          <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onLogoFile} />
         </label>
-        {error ? <p className="banner error">{error}</p> : null}
         <div className="deal-actions">
           <button className="btn btn-primary" type="submit" disabled={savingTitle || !siteTitle.trim()}>
             {savingTitle ? "Saving…" : "Save site"}
@@ -413,8 +425,6 @@ export function Admin() {
             ))}
           </div>
         ) : null}
-
-        {error ? <p className="banner error">{error}</p> : null}
 
         <div className="deal-actions">
           <button className="btn btn-primary" type="submit" disabled={busy}>

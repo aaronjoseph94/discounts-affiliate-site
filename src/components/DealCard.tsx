@@ -1,3 +1,4 @@
+/** One deal: brand, optional code (tap to copy), and affiliate link. */
 import { useEffect, useRef, useState } from "react";
 import type { Deal } from "../lib/types.ts";
 import { BrandLogo } from "./BrandLogo.tsx";

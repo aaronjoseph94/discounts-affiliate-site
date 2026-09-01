@@ -19,6 +19,7 @@ describe("session tokens", () => {
     expect(sessionValid(token, "secret")).toBe(true);
     expect(sessionValid(token, "other")).toBe(false);
     expect(sessionValid(`${token}x`, "secret")).toBe(false);
+    expect(sessionValid(`${token}.extra`, "secret")).toBe(false);
     expect(sessionValid(undefined, "secret")).toBe(false);
   });
 });
