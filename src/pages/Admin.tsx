@@ -333,7 +333,7 @@ export function Admin() {
         </div>
         <div className="deal-actions">
           <button className="btn btn-primary" type="submit" disabled={savingTitle || !siteTitle.trim()}>
-            {savingTitle ? "Saving…" : "Save site"}
+            {savingTitle ? "Saving…" : "Save"}
           </button>
           <button
             className="btn btn-secondary"
